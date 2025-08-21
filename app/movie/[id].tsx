@@ -14,6 +14,7 @@ import { icons } from "@/constants/icons";
 import useFetch from "@/services/usefetch";
 import { fetchMovieDetails, fetchMovieTrailer } from "@/services/api";
 import { useEffect, useState } from "react";
+import { isMovieSaved, saveMovie, unsaveMovie } from "@/utils/saveMovie";
 
 interface MovieInfoProps {
   label: string;
@@ -34,6 +35,7 @@ const Details = () => {
   const { id } = useLocalSearchParams();
 
   const [trailerUrl, setTrailerUrl] = useState<string | undefined>(undefined);
+  const [isSaved, setIsSaved] = useState<boolean>(false);
 
   const { data: movie, loading } = useFetch(() =>
     fetchMovieDetails(id as string)
@@ -41,9 +43,22 @@ const Details = () => {
 
   useEffect(() => {
     if (id) {
-      fetchMovieTrailer(id as string).then(setTrailerUrl).catch(() => setTrailerUrl(undefined));
+      fetchMovieTrailer(id as string)
+        .then(setTrailerUrl)
+        .catch(() => setTrailerUrl(undefined));
+      isMovieSaved(id as string).then(setIsSaved);
     }
   }, [id]);
+
+  const handleSaveToggle = async () => {
+    if (isSaved) {
+      await unsaveMovie(id as string);
+      setIsSaved(false);
+    } else {
+      await saveMovie(id as string);
+      setIsSaved(true);
+    }
+  };
 
   if (loading)
     return (
@@ -65,7 +80,7 @@ const Details = () => {
           />
 
           {trailerUrl && (
-            <TouchableOpacity 
+            <TouchableOpacity
               className="absolute bottom-5 right-5 rounded-full size-14 bg-white flex items-center justify-center"
               onPress={() => {
                 console.log("Play pressed");
@@ -79,6 +94,13 @@ const Details = () => {
               />
             </TouchableOpacity>
           )}
+
+          <TouchableOpacity
+            className="absolute top-5 right-5 rounded-full size-12 flex items-center justify-center"
+            onPress={handleSaveToggle}
+          >
+            <Text className="text-3xl">{isSaved ? "❤️" : "🤍"}</Text>
+          </TouchableOpacity>
         </View>
 
         <View className="flex-col items-start justify-center mt-5 px-5">
