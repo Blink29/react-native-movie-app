@@ -34,7 +34,7 @@ export const fetchMovieDetails = async (
 ): Promise<MovieDetails> => {
   try {
     const response = await fetch(
-      `${TMDB_CONFIG.BASE_URL}/movie/${movieId}?api_key=${TMDB_CONFIG.API_KEY}`,
+      `${TMDB_CONFIG.BASE_URL}/movie/${movieId}`,
       {
         method: "GET",
         headers: TMDB_CONFIG.headers,
@@ -49,6 +49,29 @@ export const fetchMovieDetails = async (
     return data;
   } catch (error) {
     console.error("Error fetching movie details:", error);
+    throw error;
+  }
+};
+
+export const fetchMovieTrailer = async (movieId: string): Promise<string | undefined> => {
+  try {
+    const response = await fetch(
+      `${TMDB_CONFIG.BASE_URL}/movie/${movieId}/videos`,
+      {
+        method: "GET",
+        headers: TMDB_CONFIG.headers,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch movie trailer: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const trailer = data.results.find((video: any) => video.type === "Trailer");
+    return trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : undefined;
+  } catch (error) {
+    console.error("Error fetching movie trailer:", error);
     throw error;
   }
 };
